@@ -10,10 +10,13 @@ import br.com.alura.forum.repositories.TopicRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +35,7 @@ public class TopicsController {
     CourseRepository courseRepository;
 
     @PostMapping("/create")
+    @CacheEvict(value = "topicList" , allEntries = true)
     public ResponseEntity<TopicResponseDTO> createTopic(@RequestBody @Valid TopicRequestDTO topicForm){
         Optional<Course> course = this.courseRepository.findByName(topicForm.courseName());
         if (course.isPresent()){
@@ -57,8 +61,8 @@ public class TopicsController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<Page<TopicResponseDTO>> listTopics(@RequestParam (required = false) String couseName, @RequestParam int page, @RequestParam int quantity, @RequestParam String orderBy){
-        Pageable pageable = PageRequest.of(page, quantity, Sort.Direction.ASC, orderBy );
+    @Cacheable(value = "topicList")
+    public ResponseEntity<Page<TopicResponseDTO>> listTopics(@RequestParam (required = false) String couseName, @PageableDefault(sort = "createdAt", direction = Sort.Direction.ASC, page = 0, size = 10) Pageable pageable){
 
         Page<TopicResponseDTO> topics;
 
@@ -69,6 +73,7 @@ public class TopicsController {
 
     @PutMapping("/update/{id}")
     @Transactional
+    @CacheEvict(value = "topicList" , allEntries = true)
     public ResponseEntity<TopicResponseDTO> updateTopic(@PathVariable UUID id, @RequestBody @Valid TopicUpdateDTO topicForm){
         Optional<Topic> topic =  this.topicRepository.findById(id);
         if (topic.isPresent()){
@@ -84,6 +89,7 @@ public class TopicsController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @CacheEvict(value = "topicList" , allEntries = true)
     public ResponseEntity<?> deleteTopic(@PathVariable UUID id){
         Optional<Topic> topic = this.topicRepository.findById(id);
         if (topic.isPresent()){
