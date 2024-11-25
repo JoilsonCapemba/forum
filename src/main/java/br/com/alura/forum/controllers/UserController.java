@@ -5,6 +5,7 @@ import br.com.alura.forum.models.dto.UserDTO;
 import br.com.alura.forum.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -18,7 +19,10 @@ public class UserController {
 
     @PostMapping("/create")
     public ResponseEntity<User> createUser(@RequestBody UserDTO user){
-        User newUser = new User(user);
+
+        String encriptedPassword = new BCryptPasswordEncoder().encode(user.password());
+
+        User newUser = new User(user.name(), user.email(), encriptedPassword);
         userRepository.save(newUser);
         return ResponseEntity.ok(newUser);
     }
