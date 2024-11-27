@@ -7,6 +7,9 @@ import br.com.alura.forum.models.dto.TopicResponseDTO;
 import br.com.alura.forum.models.dto.TopicUpdateDTO;
 import br.com.alura.forum.repositories.CourseRepository;
 import br.com.alura.forum.repositories.TopicRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,7 @@ public class TopicsController {
 
     @GetMapping("/")
     @Cacheable(value = "topicList")
+    @SecurityRequirement(name = "jwt_auth")
     public ResponseEntity<Page<TopicResponseDTO>> listTopics(@RequestParam (required = false) String couseName, @PageableDefault(sort = "createdAt", direction = Sort.Direction.ASC, page = 0, size = 10) Pageable pageable){
 
         Page<TopicResponseDTO> topics;
@@ -74,6 +78,8 @@ public class TopicsController {
     @PutMapping("/update/{id}")
     @Transactional
     @CacheEvict(value = "topicList" , allEntries = true)
+    @Tag(name = "Topics", description = "Informações dos topicos")
+    @Operation(summary = "esta rota atualiza um topico")
     public ResponseEntity<TopicResponseDTO> updateTopic(@PathVariable UUID id, @RequestBody @Valid TopicUpdateDTO topicForm){
         Optional<Topic> topic =  this.topicRepository.findById(id);
         if (topic.isPresent()){
